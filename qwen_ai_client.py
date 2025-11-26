@@ -50,31 +50,26 @@ class QwenHairTransfer:
         """
         
         try:
+            # Analyze hairstyle first if reference image is provided
+            hairstyle_description = ""
+            if hairstyle_image_path:
+                print("🔍 Analyzing reference hairstyle...")
+                hairstyle_description = self.analyze_hairstyle(hairstyle_image_path)
+                
+                # Check if analysis was successful
+                if "cannot analyze" in hairstyle_description.lower() or "sorry" in hairstyle_description.lower() or len(hairstyle_description) < 50:
+                    print("⚠️ Vision analysis failed, using fallback description")
+                    hairstyle_description = "the hairstyle shown in the reference image with all its specific characteristics including cut, color, length, texture, and styling"
+                else:
+                    print(f"📋 Analysis complete: {hairstyle_description[:100]}...")
+            
             # Create a descriptive prompt based on whether we have reference image
             if hairstyle_image_path:
-                # Two-image mode: user + reference - VERY explicit about hair transfer
+                # Two-image mode: user + reference with detailed analysis
                 if prompt_override:
-                    enhanced_prompt = f"HAIR TRANSFER TASK: Take the hairstyle from the second image and put it on the person in the first image. {prompt_override}"
+                    enhanced_prompt = f"HAIR TRANSFER TASK: Apply this hairstyle to the person: {hairstyle_description}. {prompt_override}"
                 else:
-                    enhanced_prompt = """DETAILED HAIR TRANSPLANT OPERATION:
-
-🔍 ANALYSIS PHASE:
-1. Examine the TARGET HAIRSTYLE image in extreme detail
-2. Note EVERY hair characteristic: cut pattern, layers, length variations, color tones, highlights, texture, volume, styling direction, parting, bangs/fringe, etc.
-
-✂️ TRANSFER PHASE:
-1. Remove ALL existing hair from the SOURCE PERSON
-2. Apply the TARGET HAIRSTYLE with 100% accuracy
-3. Match hair color EXACTLY (including highlights/lowlights)
-4. Replicate the exact cut, layers, and styling
-5. Maintain the same hair volume and texture as shown in target
-6. Copy the parting style and direction precisely
-
-🎯 QUALITY CONTROL:
-- The result must be indistinguishable from the SOURCE PERSON having naturally grown the TARGET HAIRSTYLE
-- Hair must look realistic and natural on the person's head shape
-- Preserve face, skin, clothing, background unchanged
-- Final image should show perfect hair transfer with zero compromise on accuracy"""
+                    enhanced_prompt = f"Transform the person's hair to match this exact hairstyle: {hairstyle_description}. Keep the person's face, skin, clothing, and background unchanged. Only change the hair to precisely match the described style."
             else:
                 # Single-image mode: user + text description
                 if prompt_override:
@@ -82,17 +77,17 @@ class QwenHairTransfer:
                 else:
                     enhanced_prompt = "Transform this person's hairstyle. Keep all facial features, skin tone, clothing, and background exactly the same. Only change the hair naturally and realistically."
             
-            # Prepare content with enhanced image labeling for better recognition
+            # Hybrid approach: Use detailed analysis + visual reference
             if hairstyle_image_path:
-                # Two-image mode: Very explicit labeling with role definitions
+                # Two-image mode: Analysis-guided hair transfer
                 content = [
-                    {"text": "🎯 HAIR TRANSFER MISSION:"},
-                    {"text": "📸 SOURCE PERSON (to be transformed):"},
-                    {"image": user_image_path},
-                    {"text": "✂️ TARGET HAIRSTYLE (to copy exactly):"},
+                    {"text": "Hair Transformation Task:"},
+                    {"text": f"DETAILED HAIRSTYLE SPECIFICATIONS: {hairstyle_description}"},
+                    {"text": "Reference image:"},
                     {"image": hairstyle_image_path},
-                    {"text": enhanced_prompt},
-                    {"text": "⚠️ CRITICAL: Analyze the TARGET HAIRSTYLE image in detail and replicate EVERY aspect (cut, length, layers, color, texture, styling) onto the SOURCE PERSON. The result must show the SOURCE PERSON with the EXACT hairstyle from the TARGET image."}
+                    {"text": "Person to transform:"},
+                    {"image": user_image_path},
+                    {"text": enhanced_prompt}
                 ]
             else:
                 # Single-image mode
@@ -157,6 +152,63 @@ class QwenHairTransfer:
                 
         except Exception as e:
             return {"error": str(e), "status": "failed"}
+    
+    def analyze_hairstyle(self, hairstyle_image_path: str) -> str:
+        """
+        Analyze a hairstyle image in detail using Qwen vision model
+        
+        Args:
+            hairstyle_image_path: Path to the hairstyle reference image
+            
+        Returns:
+            Detailed description of the hairstyle
+        """
+        try:
+            # Use Qwen vision model to analyze the hairstyle in detail
+            response = MultiModalConversation.call(
+                model="qwen-vl-max",  # Use vision model for analysis
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"text": """Analyze this hairstyle image in extreme detail. Describe EVERY aspect of the hair:
+
+1. HAIR LENGTH: Specific length (very short, short, medium, long, very long)
+2. HAIR CUT STYLE: Type of cut (bob, pixie, layered, blunt, etc.)
+3. HAIR COLOR: Exact colors, highlights, lowlights, ombre, balayage
+4. HAIR TEXTURE: Straight, wavy, curly, coily, fine, thick
+5. HAIR STYLING: How it's styled (sleek, tousled, voluminous, flat)
+6. PARTING: Side part, middle part, no part, deep part
+7. LAYERS: Number and type of layers (face-framing, long layers, short layers)
+8. BANGS/FRINGE: Type and style if present
+9. VOLUME: Where the volume is concentrated
+10. SPECIAL FEATURES: Any unique characteristics
+
+Provide a comprehensive, detailed description that would allow someone to recreate this exact hairstyle."""},
+                            {"image": hairstyle_image_path}
+                        ]
+                    }
+                ]
+            )
+            
+            if response.status_code == 200 and response.output:
+                if 'choices' in response.output and response.output['choices']:
+                    choice = response.output['choices'][0]
+                    if 'message' in choice and 'content' in choice['message']:
+                        content = choice['message']['content']
+                        if isinstance(content, list):
+                            # Extract text from content
+                            for item in content:
+                                if 'text' in item:
+                                    return item['text']
+                        elif isinstance(content, str):
+                            return content
+            
+            return "Unable to analyze hairstyle details"
+            
+        except Exception as e:
+            print(f"Error analyzing hairstyle: {e}")
+            return f"Analysis error: {str(e)}"
     
     def generate_transformation_guide(self, result: Dict[str, Any]) -> str:
         """
