@@ -1,29 +1,30 @@
-# Virtual Hair Try-On Application
+# 🎨 Virtual Hair Try-On Application
 
-A Streamlit-based application that allows users to virtually try on different hairstyles using AI-powered image processing through the Nano Banana API with Gemini 2.5 Flash Image model.
+An advanced AI-powered hair transformation app using **Qwen Image Edit Plus** and **Qwen Vision** models for ultra-realistic hairstyle transfers.
 
-## Features
+## ✨ Features
 
-- Upload your photo and a reference hairstyle image
-- AI-powered hairstyle transfer while preserving facial features
-- High-quality photorealistic results
-- Download processed images
-- Recent try-on history
-- Advanced options for customization
+- **Hybrid AI System**: Vision analysis + Image editing for maximum accuracy
+- **Dual Input Modes**: Text description OR reference image OR both combined  
+- **Real Image Generation**: Actual transformed photos, not just overlays
+- **Dark Theme UI**: Modern glass-morphism design
+- **Advanced Analysis**: 10+ hairstyle characteristics analyzed automatically
+- **Download Results**: High-quality generated images
+- **Multiple Styles**: Natural, Creative, and Color Adaptation modes
 
-## Setup
+## 🚀 Quick Start
 
-1. Install dependencies:
+1. **Install dependencies**:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the application:
+2. **Run the application**:
 ```bash
-streamlit run app.py
+streamlit run app_vertex.py
 ```
 
-3. Open your browser to `http://localhost:8501`
+3. **Open in browser**: `http://localhost:8501`
 
 ## Usage
 
@@ -50,22 +51,47 @@ Hair Tryon/
 └── outputs/           # Generated results (created automatically)
 ```
 
-## API Configuration
+## 🤖 AI Technology
 
-The application uses the Nano Banana API with the following configuration:
-- Model: `gemini-2.5-flash-image`
-- API Key: Hardcoded in `nano_banana.py` (line 13)
+### Hybrid Dual-Model Architecture
+1. **Qwen Vision (qwen-vl-max)**: Analyzes reference hairstyles in detail
+2. **Qwen Image Edit Plus (qwen-image-edit-plus-2025-10-30)**: Performs hair transformations
 
-## Advanced Features
+### API Integration
+- **Platform**: Alibaba Cloud DashScope
+- **API Key**: `sk-f4e51b7452dc4d3ca3e8a8d48bfd4884`
+- **Base URL**: `https://dashscope-intl.aliyuncs.com/api/v1`
 
-- **Custom Prompts**: Override the default prompt for specific styling requirements
-- **Preserve Original Hair Color**: Option to keep your hair color while changing only the style
-- **Batch Processing**: View and download multiple try-on results
+📖 **Detailed API Documentation**: See `QWEN_API_DOCUMENTATION.md`  
+⚡ **Quick Setup Guide**: See `QUICK_API_SETUP.md`
 
-## Technical Details
+## 🎯 Advanced Features
 
-The application uses an optimized prompt that:
-- Preserves 100% of facial features and identity
-- Transfers hairstyle shape, texture, and flow
-- Ensures natural integration and photorealistic results
-- Adapts hair color to look natural with skin tone
+- **Reference Image Analysis**: 10-point detailed hairstyle breakdown
+- **Smart Fallback**: Handles analysis failures gracefully  
+- **Multiple Input Modes**: Text + Image + Combined approaches
+- **Generation Styles**: Natural, Creative, Color Adaptation
+- **Dark Theme**: Modern UI with glass-morphism effects
+
+## 🏗 Project Structure
+
+```
+Hair Tryon/
+├── app_vertex.py              # Main Streamlit application  
+├── qwen_ai_client.py          # Qwen API integration
+├── requirements.txt           # Dependencies
+├── QWEN_API_DOCUMENTATION.md  # Complete API docs
+├── QUICK_API_SETUP.md         # Quick reference
+├── uploads/                   # Temporary uploads
+└── outputs/                   # Generated results
+```
+
+## 📚 Documentation
+
+- **`QWEN_API_DOCUMENTATION.md`**: Complete API integration guide
+- **`QUICK_API_SETUP.md`**: Quick copy-paste setup for other projects
+- **API Key**: `sk-f4e51b7452dc4d3ca3e8a8d48bfd4884` (for reference/other projects)
+
+---
+
+**Developed by StammConnect**
